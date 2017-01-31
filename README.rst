@@ -8,6 +8,7 @@ Its main purpose is to re-use users' email, first name and last name attributes
 stored in a LDAP directory when integrating Rundeck with LDAP or Crowd.
 
 It will become useless once these issues will be solved:
+
 * LDAP_
 * Crowd_
 
