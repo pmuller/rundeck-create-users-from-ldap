@@ -26,17 +26,17 @@ WHERE id={id}
 """
 
 
-def get_ldap_users(ldap_uri, bind_dn, bind_password, search_base):
+def get_ldap_users(ldap_uri, bind_dn, bind_password, search_base, search_filter):
     result = {}
 
     conn = ldap.initialize(ldap_uri)
     conn.simple_bind_s(bind_dn, bind_password)
 
-    for _, data in conn.search_s(search_base, ldap.SCOPE_ONELEVEL):
+    for _, data in conn.search_s(search_base, ldap.SCOPE_ONELEVEL, filterstr=search_filter):
         result[data['uid'][0]] = {
-            'email': data['mail'][0],
-            'first_name': data['givenName'][0],
-            'last_name': data['sn'][0],
+            'email': data['mail'][0] if 'mail' in data else "",
+            'first_name': data['givenName'][0] if 'givenName' in data else data['cn'][0].split()[0],
+            'last_name': data['sn'][0] if 'sn' in data else data['cn'][0].split()[len(data['cn'][0].split()) - 1],
         }
 
     return result
@@ -89,6 +89,7 @@ def parse_cli_arguments():
 
     parser.add_argument('-D', '--debug', default=False, action='store_true')
     parser.add_argument('--ldap-search-base', required=True)
+    parser.add_argument('--ldap-filter', default='(objectClass=*)')
     parser.add_argument('--ldap-uri', required=True)
     parser.add_argument('--ldap-bind-dn', required=True)
     parser.add_argument('--ldap-bind-password', required=True)
@@ -109,7 +110,7 @@ def main():
 
     ldap_users = get_ldap_users(
         arguments.ldap_uri, arguments.ldap_bind_dn,
-        arguments.ldap_bind_password, arguments.ldap_search_base)
+        arguments.ldap_bind_password, arguments.ldap_search_base, arguments.ldap_filter)
     LOGGER.debug('LDAP users: %r', ldap_users)
 
     if arguments.java_classpath:
