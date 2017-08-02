@@ -34,9 +34,9 @@ def get_ldap_users(ldap_uri, bind_dn, bind_password, search_base, search_filter)
 
     for _, data in conn.search_s(search_base, ldap.SCOPE_ONELEVEL, filterstr=search_filter):
         result[data['uid'][0]] = {
-            'email': data['mail'][0],
-            'first_name': data['givenName'][0],
-            'last_name': data['sn'][0],
+            'email': data['mail'][0] if 'mail' in data else "",
+            'first_name': data['givenName'][0] if 'givenName' in data else data['cn'][0].split()[0],
+            'last_name': data['sn'][0] if 'sn' in data else data['cn'][0].split()[len(data['cn'][0].split()) - 1],
         }
 
     return result
